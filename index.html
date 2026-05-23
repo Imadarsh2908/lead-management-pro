@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Management System - Pro</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🎯 Lead Management Pro</h1>
+    <div class="header-actions">
+      <button class="btn btn-success" onclick="openModal('addLead')">➕ Add Lead</button>
+      <button class="btn btn-info" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">📤 Import CSV</button>
+      <input type="file" id="importFile" accept=".csv" style="display:none" onchange="importCSV(event)">
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+      <button class="btn btn-danger" onclick="confirmClearAll()">🗑️ Clear All</button>
+    </div>
+  </div>
+
+  <!-- Dashboard Stats -->
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('leads', this)">📋 Leads</button>
+    <button class="tab" onclick="switchTab('pipeline', this)">🔄 Pipeline</button>
+    <button class="tab" onclick="switchTab('analytics', this)">📊 Analytics</button>
+    <button class="tab" onclick="switchTab('activities', this)">📅 Activities</button>
+    <button class="tab" onclick="switchTab('tasks', this)">✅ Tasks</button>
+    <button class="tab" onclick="switchTab('settings', this)">⚙️ Settings</button>
+  </div>
+
+  <!-- Leads Tab -->
+  <div class="tab-content active" id="tab-leads">
+    <div class="content-card">
+      <div class="section-title">
+        <span>All Leads</span>
+        <span id="leadCount" style="font-size:14px;color:#6b7280;"></span>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, email, company, phone..." oninput="renderLeads()">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label>Status</label>
+          <select id="filterStatus" onchange="renderLeads()">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Qualified">Qualified</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Priority</label>
+          <select id="filterPriority" onchange="renderLeads()">
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Source</label>
+          <select id="filterSource" onchange="renderLeads()">
+            <option value="">All Sources</option>
+            <option value="Website">Website</option>
+            <option value="Referral">Referral</option>
+            <option value="Social Media">Social Media</option>
+            <option value="Email Campaign">Email Campaign</option>
+            <option value="Cold Call">Cold Call</option>
+            <option value="Trade Show">Trade Show</option>
+            <option value="Advertisement">Advertisement</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Assigned To</label>
+          <select id="filterAssigned" onchange="renderLeads()">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select id="sortBy" onchange="renderLeads()">
+            <option value="created-desc">Newest First</option>
+            <option value="created-asc">Oldest First</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="value-desc">Value (High-Low)</option>
+            <option value="value-asc">Value (Low-High)</option>
+            <option value="rating-desc">Rating (High-Low)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bulk-bar" id="bulkBar">
+        <span><strong id="selectedCount">0</strong> leads selected</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="bulkStatus" style="width:auto;">
+            <option value="">Change Status...</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Qualified">Qualified</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+          </select>
+          <button class="btn btn-info btn-sm" onclick="bulkUpdateStatus()">Apply</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete Selected</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearSelection()">Clear</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="leadsTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+              <th onclick="sortTable('name')">Name</th>
+              <th>Contact</th>
+              <th>Company</th>
+              <th onclick="sortTable('status')">Status</th>
+              <th>Priority</th>
+              <th>Source</th>
+              <th onclick="sortTable('value')">Value</th>
+              <th>Rating</th>
+              <th>Assigned</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline Tab -->
+  <div class="tab-content" id="tab-pipeline">
+    <div class="content-card">
+      <div class="section-title">
+        <span>Sales Pipeline</span>
+        <span style="font-size:13px;color:#6b7280;">Drag cards between columns to update status</span>
+      </div>
+      <div class="pipeline" id="pipelineBoard"></div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div class="tab-content" id="tab-analytics">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>📊 Leads by Status</h3>
+        <div class="bar-chart" id="chartStatus"></div>
+      </div>
+      <div class="chart-card">
+        <h3>🎯 Leads by Source</h3>
+        <div class="bar-chart" id="chartSource"></div>
+      </div>
+      <div class="chart-card">
+        <h3>⚡ Leads by Priority</h3>
+        <div class="bar-chart" id="chartPriority"></div>
+      </div>
+      <div class="chart-card">
+        <h3>💰 Revenue Pipeline</h3>
+        <div class="bar-chart" id="chartRevenue"></div>
+      </div>
+    </div>
+    <div class="content-card">
+      <div class="section-title"><span>📈 Key Performance Indicators</span></div>
+      <div class="stats-grid" id="kpiGrid"></div>
+    </div>
+    <div class="content-card">
+      <div class="section-title"><span>🏆 Top Leads by Value</span></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Rank</th><th>Name</th><th>Company</th><th>Value</th><th>Status</th></tr></thead>
+          <tbody id="topLeadsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activities Tab -->
+  <div class="tab-content" id="tab-activities">
+    <div class="content-card">
+      <div class="section-title">
+        <span>Activity Log</span>
+        <button class="btn btn-secondary btn-sm" onclick="clearActivities()">Clear Log</button>
+      </div>
+      <div class="activity-list" id="activityList"></div>
+    </div>
+  </div>
+
+  <!-- Tasks Tab -->
+  <div class="tab-content" id="tab-tasks">
+    <div class="content-card">
+      <div class="section-title">
+        <span>Tasks & Reminders</span>
+        <button class="btn btn-success btn-sm" onclick="openModal('addTask')">➕ Add Task</button>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <label>Status</label>
+          <select id="taskFilter" onchange="renderTasks()">
+            <option value="">All Tasks</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+      </div>
+      <div id="tasksList"></div>
+    </div>
+  </div>
+
+  <!-- Settings Tab -->
+  <div class="tab-content" id="tab-settings">
+    <div class="content-card">
+      <div class="section-title"><span>⚙️ Settings</span></div>
+      <div class="settings-grid">
+        <div class="setting-section">
+          <h3>👥 Team Members</h3>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input type="text" id="newTeamMember" placeholder="Enter name...">
+            <button class="btn btn-success btn-sm" onclick="addTeamMember()">Add</button>
+          </div>
+          <div id="teamList"></div>
+        </div>
+        <div class="setting-section">
+          <h3>🏷️ Lead Tags</h3>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input type="text" id="newTag" placeholder="Enter tag...">
+            <button class="btn btn-success btn-sm" onclick="addGlobalTag()">Add</button>
+          </div>
+          <div id="tagsList" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
+        <div class="setting-section">
+          <h3>💾 Data Management</h3>
+          <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">Backup or restore your data</p>
+          <button class="btn btn-info btn-sm" onclick="exportJSON()">📥 Export Backup (JSON)</button>
+          <button class="btn btn-warning btn-sm" onclick="document.getElementById('importJSON').click()">📤 Import Backup</button>
+          <input type="file" id="importJSON" accept=".json" style="display:none" onchange="importJSONFile(event)">
+        </div>
+        <div class="setting-section">
+          <h3>📊 Statistics</h3>
+          <div id="settingsStats" style="font-size:13px;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add/Edit Lead Modal -->
+<div class="modal-overlay" id="modal-addLead">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="leadModalTitle">Add New Lead</h2>
+      <button class="close-btn" onclick="closeModal('addLead')">&times;</button>
+    </div>
+    <form id="leadForm" onsubmit="saveLead(event)">
+      <input type="hidden" id="leadId">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="firstName" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="lastName" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="phone">
+        </div>
+        <div class="form-group">
+          <label>Company</label>
+          <input type="text" id="company">
+        </div>
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="jobTitle">
+        </div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="status" required>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Qualified">Qualified</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="priority">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Source</label>
+          <select id="source">
+            <option value="Website">Website</option>
+            <option value="Referral">Referral</option>
+            <option value="Social Media">Social Media</option>
+            <option value="Email Campaign">Email Campaign</option>
+            <option value="Cold Call">Cold Call</option>
+            <option value="Trade Show">Trade Show</option>
+            <option value="Advertisement">Advertisement</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Assigned To</label>
+          <select id="assignedTo"></select>
+        </div>
+        <div class="form-group">
+          <label>Deal Value (₹)</label>
+          <input type="number" id="dealValue" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-group">
+          <label>Rating (1-5)</label>
+          <select id="rating">
+            <option value="0">Not Rated</option>
+            <option value="1">⭐ 1</option>
+            <option value="2">⭐⭐ 2</option>
+            <option value="3">⭐⭐⭐ 3</option>
+            <option value="4">⭐⭐⭐⭐ 4</option>
+            <option value="5">⭐⭐⭐⭐⭐ 5</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Website</label>
+          <input type="url" id="website" placeholder="https://">
+        </div>
+        <div class="form-group">
+          <label>Industry</label>
+          <input type="text" id="industry">
+        </div>
+        <div class="form-group full">
+          <label>Address</label>
+          <input type="text" id="address">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="city">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" id="country">
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="notes" placeholder="Add any relevant notes..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="tags" placeholder="e.g. enterprise, vip, follow-up">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addLead')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Lead Modal -->
+<div class="modal-overlay" id="modal-viewLead">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Lead Details</h2>
+      <button class="close-btn" onclick="closeModal('viewLead')">&times;</button>
+    </div>
+    <div id="leadDetails"></div>
+    <div class="detail-section">
+      <h3 style="margin-bottom:10px;font-size:16px;">📝 Notes & Comments</h3>
+      <textarea id="newNote" placeholder="Add a note..."></textarea>
+      <button class="btn btn-success btn-sm" style="margin-top:8px;" onclick="addNoteToLead()">Add Note</button>
+      <div class="notes-list" id="leadNotes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="modal-addTask">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Task</h2>
+      <button class="close-btn" onclick="closeModal('addTask')">&times;</button>
+    </div>
+    <form id="taskForm" onsubmit="saveTask(event)">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Title *</label>
+          <input type="text" id="taskTitle" required>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="taskDate">
+        </div>
+        <div class="form-group">
+          <label>Related Lead</label>
+          <select id="taskLead">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="taskDesc"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addTask')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
